@@ -514,22 +514,8 @@ elif menu == "Öğrenci Detayları":
                 co1, co2, co3 = st.columns([1, 6, 2])
                 if co1.checkbox("", value=hw["tamamlandi"], key=f"ch_{hw['id']}") != hw["tamamlandi"]:
                     student["odevler"][i]["tamamlandi"] = not hw["tamamlandi"]; save_data(st.session_state.students); st.rerun()
-                status = "✅" if hw["tamamlandi"] else "⏳"
                 co2.write(f"{status} **{hw['ders']}** - {hw['konu']} ({hw['kaynak']}: {hw['detay']})")
                 co3.write(f"📅 {hw['tarih']}")
-            
-            # --- ÖĞRENCİ SİLME (TEHLİKELİ BÖLGE) ---
-            st.divider()
-            with st.expander("🚨 Tehlikeli Bölge (Öğrenciyi Sil)"):
-                st.warning("Bu işlem geri alınamaz! Öğrenciye ait tüm veriler (kitaplar ve ödevler) kalıcı olarak silinecektir.")
-                confirm_delete = st.checkbox(f"**{student['ad']} {student['soyad']}** isimli öğrenciyi silmek istediğime eminim.", key=f"delete_check_{student['id']}")
-                if st.button("🗑️ Öğrenciyi Kalıcı Olarak Sil", type="primary", disabled=not confirm_delete, key=f"delete_btn_{student['id']}"):
-                    # Session state'den sil
-                    st.session_state.students = [s for s in st.session_state.students if s["id"] != student["id"]]
-                    # Google Sheets'ten sil
-                    save_data(st.session_state.students)
-                    st.success("Öğrenci başarıyla silindi!")
-                    st.rerun()
 
 elif menu == "Ayarlar / Yedekleme":
     st.header("⚙️ Ayarlar ve Yedekleme")
