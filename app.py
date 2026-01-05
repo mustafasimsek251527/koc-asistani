@@ -328,7 +328,7 @@ if st.sidebar.button("Çıkış Yap"):
     st.session_state.logged_in = False
     st.rerun()
 
-menu_options = ["Öğrenci Listesi", "Yeni Öğrenci Ekle", "Öğrenci Detayları", "Ayarlar / Yedekleme"]
+menu_options = ["Öğrenci Listesi", "Yeni Öğrenci Ekle", "Öğrenci Detayları", "Ayarlar / Yedekleme", "Hesap Ayarları"]
 if st.session_state.user_rol == "admin":
     menu_options.append("Ayarlar / Koç Yönetimi")
 
@@ -517,6 +517,19 @@ elif menu == "Öğrenci Detayları":
                 status = "✅" if hw["tamamlandi"] else "⏳"
                 co2.write(f"{status} **{hw['ders']}** - {hw['konu']} ({hw['kaynak']}: {hw['detay']})")
                 co3.write(f"📅 {hw['tarih']}")
+            
+            # --- ÖĞRENCİ SİLME (TEHLİKELİ BÖLGE) ---
+            st.divider()
+            with st.expander("🚨 Tehlikeli Bölge (Öğrenciyi Sil)"):
+                st.warning("Bu işlem geri alınamaz! Öğrenciye ait tüm veriler (kitaplar ve ödevler) kalıcı olarak silinecektir.")
+                confirm_delete = st.checkbox(f"**{student['ad']} {student['soyad']}** isimli öğrenciyi silmek istediğime eminim.", key=f"delete_check_{student['id']}")
+                if st.button("🗑️ Öğrenciyi Kalıcı Olarak Sil", type="primary", disabled=not confirm_delete, key=f"delete_btn_{student['id']}"):
+                    # Session state'den sil
+                    st.session_state.students = [s for s in st.session_state.students if s["id"] != student["id"]]
+                    # Google Sheets'ten sil
+                    save_data(st.session_state.students)
+                    st.success("Öğrenci başarıyla silindi!")
+                    st.rerun()
 
 elif menu == "Ayarlar / Yedekleme":
     st.header("⚙️ Ayarlar ve Yedekleme")
@@ -595,3 +608,33 @@ elif menu == "Ayarlar / Koç Yönetimi" and st.session_state.user_rol == "admin"
                     # st.rerun() # Rerun yapmıyoruz ki kullanıcı bilgileri görebilsin
                 else:
                     st.warning("Lütfen koçun adını ve soyadını girin.")
+
+elif menu == "Hesap Ayarları":
+    st.header("👤 Hesap Ayarları")
+    st.subheader("Şifre Değiştir")
+    
+    with st.form("password_change_form"):
+        old_pass = st.text_input("Mevcut Şifre", type="password")
+        new_pass = st.text_input("Yeni Şifre", type="password")
+        confirm_pass = st.text_input("Yeni Şifre (Tekrar)", type="password")
+        
+        if st.form_submit_button("Şifreyi Güncelle"):
+            users = load_users()
+            current_user_obj = next((u for u in users if u["kullanici_adi"] == st.session_state.user), None)
+            
+            if not (old_pass and new_pass and confirm_pass):
+                st.warning("Lütfen tüm alanları doldurun.")
+            elif old_pass != current_user_obj["sifre"]:
+                st.error("Mevcut şifre hatalı!")
+            elif new_pass != confirm_pass:
+                st.error("Yeni şifreler eşleşmiyor!")
+            elif len(new_pass) < 4:
+                st.error("Yeni şifre en az 4 karakter olmalıdır!")
+            else:
+                # Şifreyi güncelle
+                for u in users:
+                    if u["kullanici_adi"] == st.session_state.user:
+                        u["sifre"] = new_pass
+                        break
+                save_users(users)
+                st.success("Şifreniz başarıyla güncellendi!")
