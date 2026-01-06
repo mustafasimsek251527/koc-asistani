@@ -101,9 +101,15 @@ def login():
 
 # --- PDF FONT AYARI (Türkçe Karakter Desteği) ---
 try:
-    pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
-    PDF_FONT = 'Arial'
-except:
+    # Font dosyası proje klasöründe varsa onu kullan
+    if os.path.exists('arial.ttf'):
+        pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+        PDF_FONT = 'Arial'
+    else:
+        # Yoksa varsayılanı kullan (Yine de Türkçe sorunu olabilir ama kod çökmez)
+        PDF_FONT = 'Helvetica'
+except Exception as e:
+    st.warning(f"Font yüklenirken hata oluştu: {e}")
     PDF_FONT = 'Helvetica'
 
 # --- YARDIMCI FONKSİYONLAR ---
