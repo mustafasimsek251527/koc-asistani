@@ -512,10 +512,20 @@ elif menu == "Öğrenci Detayları":
             
             for i, hw in enumerate(student["odevler"]):
                 co1, co2, co3 = st.columns([1, 6, 2])
+                status = "✅" if hw["tamamlandi"] else "⏳"
                 if co1.checkbox("", value=hw["tamamlandi"], key=f"ch_{hw['id']}") != hw["tamamlandi"]:
                     student["odevler"][i]["tamamlandi"] = not hw["tamamlandi"]; save_data(st.session_state.students); st.rerun()
                 co2.write(f"{status} **{hw['ders']}** - {hw['konu']} ({hw['kaynak']}: {hw['detay']})")
                 co3.write(f"📅 {hw['tarih']}")
+
+        st.divider()
+        st.subheader("Öğrenci Kaydını Sil")
+        confirm_delete = st.checkbox("Bu öğrenciyi silmek istediğimi onaylıyorum", key=f"confirm_del_{student['id']}")
+        if st.button("Öğrenciyi Sil", type="primary", disabled=not confirm_delete, key=f"del_btn_{student['id']}"):
+            st.session_state.students = [s for s in st.session_state.students if s["id"] != student["id"]]
+            save_data(st.session_state.students)
+            st.success(f"{student['ad']} {student['soyad']} kaydı başarıyla silindi.")
+            st.rerun()
 
 elif menu == "Ayarlar / Yedekleme":
     st.header("⚙️ Ayarlar ve Yedekleme")
